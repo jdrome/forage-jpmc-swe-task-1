@@ -1,0 +1,113 @@
+From 002de69bed69c8395b90f6038eeca83ca3a57600 Mon Sep 17 00:00:00 2001
+From: "Jose D. Romero" <josedanilromero@gmail.com>
+Date: Wed, 2 Oct 2024 10:55:49 -0500
+Subject: [PATCH] fix(stock-api): Correct stock output data in client3.py
+
+---
+ Pipfile      | 12 ++++++++++++
+ Pipfile.lock | 38 ++++++++++++++++++++++++++++++++++++++
+ client3.py   | 10 +++++++---
+ 3 files changed, 57 insertions(+), 3 deletions(-)
+ create mode 100644 Pipfile
+ create mode 100644 Pipfile.lock
+
+diff --git a/Pipfile b/Pipfile
+new file mode 100644
+index 0000000..bfaab42
+--- /dev/null
++++ b/Pipfile
+@@ -0,0 +1,12 @@
++[[source]]
++url = "https://pypi.org/simple"
++verify_ssl = true
++name = "pypi"
++
++[packages]
++python-dateutil = "==2.8.2"
++
++[dev-packages]
++
++[requires]
++python_version = "3.10"
+diff --git a/Pipfile.lock b/Pipfile.lock
+new file mode 100644
+index 0000000..82e2476
+--- /dev/null
++++ b/Pipfile.lock
+@@ -0,0 +1,38 @@
++{
++    "_meta": {
++        "hash": {
++            "sha256": "482d62868f0f7d482f738d2c9230a1eb40660ef177eb16f0f156e0a2577230ed"
++        },
++        "pipfile-spec": 6,
++        "requires": {
++            "python_version": "3.10"
++        },
++        "sources": [
++            {
++                "name": "pypi",
++                "url": "https://pypi.org/simple",
++                "verify_ssl": true
++            }
++        ]
++    },
++    "default": {
++        "python-dateutil": {
++            "hashes": [
++                "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86",
++                "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"
++            ],
++            "index": "pypi",
++            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
++            "version": "==2.8.2"
++        },
++        "six": {
++            "hashes": [
++                "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
++                "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
++            ],
++            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
++            "version": "==1.16.0"
++        }
++    },
++    "develop": {}
++}
+diff --git a/client3.py b/client3.py
+index 3fc09b7..016fa6a 100644
+--- a/client3.py
++++ b/client3.py
+@@ -35,14 +35,16 @@ def getDataPoint(quote):
+     stock = quote['stock']
+     bid_price = float(quote['top_bid']['price'])
+     ask_price = float(quote['top_ask']['price'])
+-    price = bid_price
++    price = (bid_price + ask_price) / 2
+     return stock, bid_price, ask_price, price
+ 
+ 
+ def getRatio(price_a, price_b):
+     """ Get ratio of price_a and price_b """
+     """ ------------- Update this function ------------- """
+-    return 1
++    if (price_b == 0):
++        return
++    return price_a / price_b
+ 
+ 
+ # Main
+@@ -52,8 +54,10 @@ if __name__ == "__main__":
+         quotes = json.loads(urllib.request.urlopen(QUERY.format(random.random())).read())
+ 
+         """ ----------- Update to get the ratio --------------- """
++        prices = {}
+         for quote in quotes:
+             stock, bid_price, ask_price, price = getDataPoint(quote)
++            prices[stock] = price
+             print("Quoted %s at (bid:%s, ask:%s, price:%s)" % (stock, bid_price, ask_price, price))
+ 
+-        print("Ratio %s" % getRatio(price, price))
++        print("Ratio %s" % getRatio(prices['ABC'], prices['DEF'])) # get price stored at stock ABC and DEF in dictionary then calculate Ratio
+-- 
+2.40.0
+
